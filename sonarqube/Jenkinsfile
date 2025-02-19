@@ -1,33 +1,51 @@
-node {
-    def myGradleContainer = docker.image('gradle:jdk8-alpine')
-
-    stage('Prepare') {
-        myGradleContainer.pull()
-        git branch: 'main', url: 'https://github.com/luimungar3/tienda.git'
+pipeline {
+    agent any
+    tools {
+        // Asegúrate de que SonarQube está configurado en Jenkins
+        sonar 'SonarQube Scanner'
     }
-
-    stage('Build') {
-        myGradleContainer.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
-            sh '/opt/gradle/bin/gradle -p complete build'
+    environment {
+        // Definir el sonar-scanner en el ambiente
+        sonarqubeScannerHome = tool name: 'SonarQube Scanner', type: 'ToolProperty'
+    }
+    stages {
+        stage('Prepare') {
+            steps {
+                script {
+                    // Preparar el entorno antes de iniciar el análisis
+                    sh 'docker pull gradle:jdk8-alpine'
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                script {
+                    // Construcción del proyecto usando Gradle
+                    sh '/opt/gradle/bin/gradle -p complete build'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // Ejecutar análisis de SonarQube
+                    withCredentials([string(credentialsId: 'sonar', variable: 'sonarLogin')]) {
+                        sh """
+                            ${sonarqubeScannerHome}/bin/sonar-scanner \
+                            -Dsonar.host.url=http://sonarqube:9000 \
+                            -Dsonar.login=${sonarLogin} \
+                            -Dsonar.projectName=tienda \
+                            -Dsonar.projectVersion=${env.BUILD_NUMBER} \
+                            -Dsonar.projectKey=TIENDA \
+                            -Dsonar.sources=.,admin \
+                            -Dsonar.java.binaries=build/classes \
+                            -Dsonar.tests=
+                        """
+                    }
+                }
+            }
         }
     }
-    stage('SonarQube Analysis') {
-        tool name: 'sonar', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-        withCredentials([string(credentialsId: 'sonar', variable: 'sonarLogin')]) {
-            sh """
-                ${sonarqubeScannerHome}/bin/sonar-scanner \
-                -Dsonar.host.url=http://sonarqube:9000 \
-                -Dsonar.login=${sonarLogin} \
-                -Dsonar.projectName=tienda \
-                -Dsonar.projectVersion=${env.BUILD_NUMBER} \
-                -Dsonar.projectKey=TIENDA \
-                -Dsonar.sources=.,admin \
-                -Dsonar.java.binaries=build/classes \
-                -Dsonar.tests=
-            """
-        }
-    }
-
-    
 }
+
 
