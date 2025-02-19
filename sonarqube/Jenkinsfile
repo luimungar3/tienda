@@ -21,7 +21,7 @@ node {
                 -Dsonar.projectName=tienda \
                 -Dsonar.projectVersion=${env.BUILD_NUMBER} \
                 -Dsonar.projectKey=TIENDA \
-                -Dsonar.sources=.,otherFolder \
+                -Dsonar.sources=.admin \
                 -Dsonar.java.binaries=build/classes \
                 -Dsonar.tests=
             """
