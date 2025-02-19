@@ -1,0 +1,31 @@
+node {
+    def myGradleContainer = docker.image('gradle:jdk8-alpine')
+
+    stage('Prepare') {
+        myGradleContainer.pull()
+        git branch: 'main', url: 'https://github.com/luimungar3/gs-gradle.git'
+    }
+
+    stage('Build') {
+        myGradleContainer.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
+            sh '/opt/gradle/bin/gradle -p complete build'
+        }
+    }
+
+    stage('SonarQube Analysis') {
+        def sonarqubeScannerHome = tool name: 'sonar', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        withCredentials([string(credentialsId: 'sonar', variable: 'sonarLogin')]) {
+            sh """
+            ${sonarqubeScannerHome}/bin/sonar-scanner -e \
+                -Dsonar.host.url=http://sonarqube:9000 \
+                -Dsonar.login=${sonarLogin} \
+                -Dsonar.projectName=gs-gradle \
+                -Dsonar.projectVersion=${env.BUILD_NUMBER} \
+                -Dsonar.projectKey=GS \
+                -Dsonar.sources=complete/src/main/ \
+                -Dsonar.tests=complete/src/test/ \
+                -Dsonar.java.binaries=complete/build/classes
+            """
+        }
+    }
+}
