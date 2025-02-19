@@ -3,7 +3,7 @@ node {
 
     stage('Prepare') {
         myGradleContainer.pull()
-        git branch: 'main', url: 'https://github.com/luimungar3/gs-gradle.git'
+        git branch: 'main', url: 'https://github.com/luimungar3/tienda.git'
     }
 
     stage('Build') {
