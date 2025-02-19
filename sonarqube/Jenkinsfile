@@ -1,51 +1,50 @@
 pipeline {
     agent any
+
     tools {
-        // Asegúrate de que SonarQube está configurado en Jenkins
-        sonar 'SonarQube Scanner'
+        // Asegúrate de que el nombre coincide con la configuración de tu herramienta en Jenkins
+        sonar 'sonar'  // Nombre de la herramienta SonarQube Scanner configurada
+        jdk 'JDK 11'   // Si estás usando un JDK específico, asegúrate de que el nombre sea correcto
     }
+
     environment {
-        // Definir el sonar-scanner en el ambiente
-        sonarqubeScannerHome = tool name: 'SonarQube Scanner', type: 'ToolProperty'
+        SONAR_TOKEN = credentials('sonar')  // Usando las credenciales para SonarQube
     }
+
     stages {
-        stage('Prepare') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Preparar el entorno antes de iniciar el análisis
-                    sh 'docker pull gradle:jdk8-alpine'
-                }
+                git 'https://github.com/luimungar3/tienda.git'
             }
         }
+
         stage('Build') {
             steps {
-                script {
-                    // Construcción del proyecto usando Gradle
-                    sh '/opt/gradle/bin/gradle -p complete build'
-                }
+                // Ejecutar el build de tu proyecto (puede ser Maven, Gradle, etc.)
+                sh 'mvn clean install'  // O usa el comando correspondiente a tu proyecto
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Ejecutar análisis de SonarQube
-                    withCredentials([string(credentialsId: 'sonar', variable: 'sonarLogin')]) {
-                        sh """
-                            ${sonarqubeScannerHome}/bin/sonar-scanner \
-                            -Dsonar.host.url=http://sonarqube:9000 \
-                            -Dsonar.login=${sonarLogin} \
-                            -Dsonar.projectName=tienda \
-                            -Dsonar.projectVersion=${env.BUILD_NUMBER} \
-                            -Dsonar.projectKey=TIENDA \
-                            -Dsonar.sources=.,admin \
-                            -Dsonar.java.binaries=build/classes \
-                            -Dsonar.tests=
-                        """
+                    withSonarQubeEnv('sonar') {  // Nombre configurado del servidor SonarQube en Jenkins
+                        sh '''
+                            sonar-scanner \
+                            -Dsonar.projectKey=tienda \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://localhost:9001 \
+                            -Dsonar.login=$SONAR_TOKEN
+                        '''
                     }
                 }
             }
         }
     }
+
+    post {
+        always {
+            cleanWs()  // Limpiar el workspace después de cada ejecución
+        }
+    }
 }
-
-
