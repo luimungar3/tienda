@@ -1,14 +1,9 @@
 pipeline {
     agent any
 
-    tools {
-        // Asegúrate de que el nombre coincide con la configuración de tu herramienta en Jenkins
-        sonar 'sonar'  // Nombre de la herramienta SonarQube Scanner configurada
-        jdk 'JDK 11'   // Si estás usando un JDK específico, asegúrate de que el nombre sea correcto
-    }
-
     environment {
-        SONAR_TOKEN = credentials('sonar')  // Usando las credenciales para SonarQube
+        SONAR_HOST_URL = 'http://localhost:9001'  // URL de tu servidor SonarQube
+        SONAR_LOGIN = 'sonar'  // Token de autenticación de SonarQube
     }
 
     stages {
@@ -18,33 +13,18 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                // Ejecutar el build de tu proyecto (puede ser Maven, Gradle, etc.)
-                sh 'mvn clean install'  // O usa el comando correspondiente a tu proyecto
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('sonar') {  // Nombre configurado del servidor SonarQube en Jenkins
-                        sh '''
-                            sonar-scanner \
-                            -Dsonar.projectKey=tienda \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://localhost:9001 \
-                            -Dsonar.login=$SONAR_TOKEN
-                        '''
-                    }
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=tienda \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_LOGIN
+                    '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()  // Limpiar el workspace después de cada ejecución
         }
     }
 }
