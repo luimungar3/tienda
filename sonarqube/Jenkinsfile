@@ -23,7 +23,6 @@ node {
                 -Dsonar.projectVersion=${env.BUILD_NUMBER} \
                 -Dsonar.projectKey=GS \
                 -Dsonar.sources=complete/src/main/ \
-                -Dsonar.tests=complete/src/test/ \
                 -Dsonar.java.binaries=complete/build/classes
             """
         }
