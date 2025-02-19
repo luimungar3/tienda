@@ -11,20 +11,23 @@ node {
             sh '/opt/gradle/bin/gradle -p complete build'
         }
     }
-
     stage('SonarQube Analysis') {
-        def sonarqubeScannerHome = tool name: 'sonar', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        tool name: 'sonar', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
         withCredentials([string(credentialsId: 'sonar', variable: 'sonarLogin')]) {
             sh """
-            ${sonarqubeScannerHome}/bin/sonar-scanner -e \
+                ${sonarqubeScannerHome}/bin/sonar-scanner \
                 -Dsonar.host.url=http://sonarqube:9000 \
                 -Dsonar.login=${sonarLogin} \
-                -Dsonar.projectName=gs-gradle \
+                -Dsonar.projectName=tienda \
                 -Dsonar.projectVersion=${env.BUILD_NUMBER} \
-                -Dsonar.projectKey=GS \
-                -Dsonar.sources=complete/src/main/ \
-                -Dsonar.java.binaries=complete/build/classes
+                -Dsonar.projectKey=TIENDA \
+                -Dsonar.sources=.,otherFolder \
+                -Dsonar.java.binaries=build/classes \
+                -Dsonar.tests=
             """
         }
     }
+
+    
 }
+
