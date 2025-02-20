@@ -2,27 +2,38 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://localhost:9001'  // URL de tu servidor SonarQube
-        SONAR_LOGIN = 'sonar'  // Token de autenticación de SonarQube
+        SONAR_SCANNER_HOME = tool 'sonar'  // Usa el nombre configurado en Jenkins
+        SONAR_HOST_URL = 'http://localhost:9001'   // Cambia por la URL de tu SonarQube
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/luimungar3/tienda.git'
+                git branch: 'main', url: 'https://github.com/luimungar3/tienda.git'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    sh '''
-                        sonar-scanner \
+                withSonarQubeEnv('sonar') {  // Usa el nombre configurado en Jenkins
+                    sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=tienda \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_LOGIN
-                    '''
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Quality Gate failed: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
