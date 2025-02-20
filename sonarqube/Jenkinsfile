@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SONAR_SCANNER_HOME = tool 'sonar'  // Usa el nombre configurado en Jenkins
-        SONAR_HOST_URL = 'http://172.30.227.110:9000'   // Cambia por la URL de tu SonarQube
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -15,15 +10,16 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
-                    sh """
-                        ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                        -Dsonar.projectKey=tienda \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://172.30.227.110:9000/ \
-                        -Dsonar.login=${sonar}
-                    """
+                withSonarQubeEnv('sonar') { // Usando el nombre configurado de SonarQube
+                    withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
+                        sh """
+                            sonar-scanner \
+                            -Dsonar.projectKey=tienda \
+                            -Dsonar.sources=. \
+                            -Dsonar.login=${sonar}
+                        """
                     }
+                }
             }
         }
 
