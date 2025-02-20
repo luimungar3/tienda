@@ -15,7 +15,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Usa el nombre configurado de SonarQube
+                withSonarQubeEnv('sonar') { // Usa el nombre configurado de SonarQube
                     withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
                         sh """
                             sonar-scanner \
