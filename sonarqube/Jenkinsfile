@@ -21,7 +21,7 @@ pipeline {
                         -Dsonar.projectKey=tienda \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=http://172.30.227.110:9000/ \
-                        -Dsonar.login=${sonar1}
+                        -Dsonar.login=${sonar}
                     """
                     }
             }
