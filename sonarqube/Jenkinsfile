@@ -12,21 +12,23 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+       stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonar') { // Usa el nombre configurado de SonarQube
-                    withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
-                        sh """
-                            sonar-scanner \
-                            -Dsonar.projectKey=tienda \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://192.168.1.89:9000/ \
-                            -Dsonar.login=${sonar}
-                        """
+        withSonarQubeEnv('sonar') {
+            tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+            withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
+                sh """
+                    sonar-scanner \
+                    -Dsonar.projectKey=tienda \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://192.168.1.89:9000/ \
+                    -Dsonar.login=${sonar}
+                """
                     }
                 }
             }
         }
+
 
         stage('Quality Gate') {
             steps {
