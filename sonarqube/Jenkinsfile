@@ -15,7 +15,7 @@ pipeline {
            stage('SonarQube Analysis') {
                 steps {
                     withSonarQubeEnv('sonar') {
-                        tool name: 'SonarQube_Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation' // Usa el nombre correcto
+                        tool name: 'sonar', type: 'hudson.plugins.sonar.SonarRunnerInstallation' // Usa el nombre correcto
                         withCredentials([string(credentialsId: 'sonar1', variable: 'SONAR_TOKEN')]) {
                                 sh '''#!/bin/bash
                                     export PATH=$PATH:/var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQube_Scanner/bin
