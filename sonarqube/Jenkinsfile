@@ -12,22 +12,24 @@ pipeline {
             }
         }
 
-       stage('SonarQube Analysis') {
-            steps {
-        withSonarQubeEnv('sonar') {
-            tool name: 'SonarQube_Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-            withCredentials([string(credentialsId: 'sonar1', variable: 'sonar')]) {
-                sh """
-                    sonar-scanner \
-                    -Dsonar.projectKey=tienda \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://192.168.1.89:9000/ \
-                    -Dsonar.login=${sonar}
-                """
+           stage('SonarQube Analysis') {
+                steps {
+                    withSonarQubeEnv('sonar') {
+                        tool name: 'SonarQube_Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation' // Usa el nombre correcto
+                        withCredentials([string(credentialsId: 'sonar1', variable: 'SONAR_TOKEN')]) {
+                                sh '''#!/bin/bash
+                                    export PATH=$PATH:/var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQube_Scanner/bin
+                                    sonar-scanner \
+                                    -Dsonar.projectKey=tienda \
+                                    -Dsonar.sources=. \
+                                    -Dsonar.host.url=http://192.168.1.89:9000/ \
+                                    -Dsonar.login=$SONAR_TOKEN
+                                '''
+                            }
+                        }
                     }
                 }
-            }
-        }
+
 
 
         stage('Quality Gate') {
